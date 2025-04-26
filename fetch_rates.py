@@ -17,7 +17,7 @@ def fetch_exchange_rates(api_key, base_currency):
 
 def save_to_csv(base_currency, new_data):
     """将数据保存为CSV，避免重复"""
-    filename = f"{base_currency}.csv"
+    filename = f"rates/{base_currency}.csv"
     headers = ["timestamp"] + list(new_data["conversion_rates"].keys())
     
     # 检查文件是否存在并读取现有数据
