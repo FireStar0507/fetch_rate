@@ -16,11 +16,17 @@ def fetch_exchange_rates(api_key, base_currency):
     return data
 
 def save_to_csv(base_currency, new_data):
-    """将数据保存为CSV，避免重复"""
-    filename = f"rates/{base_currency}.csv"
-    headers = ["timestamp"] + list(new_data["conversion_rates"].keys())
+    """将数据保存为CSV，包含格式化日期"""
+    filename = f"{base_currency}.csv"
     
-    # 检查文件是否存在并读取现有数据
+    # 生成格式化日期（UTC时间）
+    timestamp = new_data["timestamp"]
+    date_str = datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 动态生成表头
+    headers = ["date", "timestamp"] + list(new_data["conversion_rates"].keys())
+    
+    # 检查重复记录
     existing_timestamps = set()
     if os.path.exists(filename):
         with open(filename, "r") as f:
@@ -28,20 +34,22 @@ def save_to_csv(base_currency, new_data):
             for row in reader:
                 existing_timestamps.add(int(row["timestamp"]))
     
-    # 如果时间戳已存在，跳过保存
-    if new_data["timestamp"] in existing_timestamps:
+    # 跳过重复数据
+    if timestamp in existing_timestamps:
         print(f"[>] {base_currency} 数据已存在，跳过保存")
         return
     
-    # 写入数据（追加模式）
+    # 写入数据
     with open(filename, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
-        # 如果是新文件，写入表头
+        # 新文件写入表头
         if not os.path.exists(filename) or os.stat(filename).st_size == 0:
             writer.writeheader()
+        
         # 构造行数据
         row_data = {
-            "timestamp": new_data["timestamp"],
+            "date": date_str,
+            "timestamp": timestamp,
             **new_data["conversion_rates"]
         }
         writer.writerow(row_data)
@@ -49,10 +57,10 @@ def save_to_csv(base_currency, new_data):
 def main():
     api_key = os.getenv("EXCHANGE_RATE_API_KEY")
     if not api_key:
-        print("[?] 未找到API密钥")
+        print("[?]未找到API密钥")
         sys.exit(1)
     
-    currencies = sys.argv[1:] if len(sys.argv) > 1 else ["USD", "CNY", "EUR", "JPY"]
+    currencies = sys.argv[1:] if len(sys.argv) > 1 else ["USD", "CNY"]
     
     for currency in currencies:
         try:
