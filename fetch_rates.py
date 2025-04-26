@@ -60,7 +60,7 @@ def main():
         print("[?]未找到API密钥")
         sys.exit(1)
     
-    currencies = sys.argv[1:] if len(sys.argv) > 1 else ["USD", "CNY"]
+    currencies = sys.argv[1:] if len(sys.argv) > 1 else ["USD", "CNY", "EUR", "JPY"]
     
     for currency in currencies:
         try:
